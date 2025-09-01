@@ -4,12 +4,14 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "ts-node src/app/server.ts"
+    "dev": "tsx watch src/app/server.ts"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@openai/agents": "^0.1.0",
+    "@openai/agents-realtime": "^0.1.0",
     "@prisma/client": "^6.15.0",
     "@prisma/extension-accelerate": "^2.0.2",
     "fastify": "^5.5.0",
