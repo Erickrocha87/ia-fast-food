@@ -2,7 +2,7 @@
   "name": "lsp-project",
   "version": "1.0.0",
   "main": "index.js",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "dev": "tsx watch src/app/server.ts"
   },
@@ -10,13 +10,15 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@fastify/cors": "^11.1.0",
     "@openai/agents": "^0.1.0",
     "@openai/agents-realtime": "^0.1.0",
     "@prisma/client": "^6.15.0",
     "@prisma/extension-accelerate": "^2.0.2",
     "fastify": "^5.5.0",
     "openai": "^5.16.0",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "zod-to-json-schema": "^3.24.6"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",
