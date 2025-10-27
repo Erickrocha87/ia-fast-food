@@ -126,7 +126,7 @@ export async function appRoutes(app: FastifyInstance) {
 
         const mp3 = await app.openai.audio.speech.create({
           model: "tts-1",
-          voice: "alloy",
+          voice: "aria",
           input: text,
         });
 
