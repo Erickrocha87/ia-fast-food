@@ -18,7 +18,7 @@ app.decorate("openai", openai);
 
 app.register(appRoutes);
 
-app.listen({ port: 3000 }, (err, address) => {
+app.listen({ port: 1337 }, (err, address) => {
   if (err) {
     app.log.error(err);
     process.exit(1);
