@@ -1,5 +1,5 @@
-import { Menu } from "@prisma/client";
+import { MenuItem } from "@prisma/client";
 
-interface IMenu extends Menu {}
+interface IMenuItem extends MenuItem {}
 
-export { IMenu };
+export { IMenuItem };

@@ -1,18 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
-import { MenuItem } from "../../common/@types/order-state";
-
+import { MenuItem } from "../../../common/@types/order-state";
 
 export class CsvService {
   private filePath: string;
-
-  constructor() {
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename);
-
-    this.filePath = path.join(__dirname, "../../data/mock/pedidos.csv");
-  }
 
   public readCsv(): MenuItem[] {
     const fileContent = fs.readFileSync(this.filePath, "utf-8");

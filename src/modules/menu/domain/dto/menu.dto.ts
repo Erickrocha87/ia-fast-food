@@ -1,3 +1,7 @@
-import { IMenu } from "../model/menu.type";
+import { IMenuItem } from "../model/menu.type";
 
-export interface MenuDTO extends Omit<IMenu, "id" | "createdAt" | "updatedAt"> {}
+interface MenuDTO extends Omit<IMenuItem, "id" | "createdAt" | "updatedAt"> {}
+
+type MenuInputDTO = Partial<MenuDTO>;
+
+export { MenuDTO, MenuInputDTO };

@@ -1,41 +1,62 @@
 import { z } from "zod";
-import { CsvService } from "../../../csv/services/csv.service";
+import { prisma } from "src/infrastructure/database";
+import { OrderService } from "src/modules/order/services/order.service";
+import { PrismaOrderRepository } from "src/modules/order/infrastructure/prisma/repository/prisma-order-repository";
+import { PrismaOrderItemRepository } from "src/modules/orderItem/infrastructure/prisma/repository/prisma-order-item.repository";
+import { MenuService } from "src/modules/menu/services/menu.service";
+import { PrismaMenuRepository } from "src/modules/menu/infrastructure/prisma/repositories/prisma-menu-repository";
 
-// TODO: DADOS MOCKADOS
-const order = new Map<string, { name: string, price: number, qty: number }>();
-const renderOrder = () => console.log("Pedido atualizado:", ...order.values());
-const csvService = new CsvService();
-const menu = csvService.readCsv();
+
+
+const orderService = new OrderService(
+  prisma,
+  new PrismaOrderRepository(prisma),
+  new PrismaOrderItemRepository(prisma)
+);
+
+const menuService = new MenuService(new PrismaMenuRepository(prisma));
+
 
 export const addToOrderDefinition = {
   name: "add_to_order",
-  description: "Adiciona um item ao pedido atual do cliente",
+  description:
+    "Cria/associa um pedido aberto para a mesa (se necessário) e adiciona o item com a quantidade informada.",
   parameters: z.object({
-    name: z.string().describe("O nome exato do item do menu a ser adicionado"),
-    quantity: z.number().int().min(1).nullable().describe("A quantidade do item a ser adicionada. O padrão é 1."),
+    tableNumber: z.string().describe("Número/código da mesa. Ex: '12'"),
+    orderId: z.number().int().nullable().describe("ID do pedido, se já existir."),
+    menuItemId: z.number().int().describe("ID do item no cardápio."),
+    quantity: z.number().int().min(1).describe("Quantidade a adicionar."),
   }),
 };
 
 export const removeFromOrderDefinition = {
   name: "remove_from_order",
-  description: "Remove uma quantidade de um item do pedido atual",
+  description:
+    "Remove (decrementa) quantidade de um item do pedido. Remove totalmente se a quantidade chegar a zero.",
   parameters: z.object({
-    name: z.string().describe("O nome exato do item a ser removido do pedido"),
-    quantity: z.number().int().min(1).nullable().describe("A quantidade a ser removida. O padrão é 1."),
+    orderId: z.number().int().describe("ID do pedido."),
+    menuItemId: z.number().int().describe("ID do item no cardápio."),
+    quantity: z.number().int().min(1).describe("Quantidade a remover."),
+  }),
+};
+
+export const listMenuItemsDefinition = {
+  name: "list_menu_items",
+  description:
+    "Lista os itens disponíveis no cardápio, opcionalmente filtrando por uma palavra-chave ou categoria.",
+  parameters: z.object({
+    query: z
+      .string()
+      .nullable()
+      .describe("Palavra-chave para filtrar itens. Ex: 'hambúrguer', 'batata', 'café'"),
   }),
 };
 
 export const getOrderSummaryDefinition = {
   name: "get_order_summary",
-  description: "Retorna um resumo completo do pedido atual, incluindo itens, quantidades, subtotais e o valor total",
-  parameters: z.object({}),
-};
-
-export const listMenuItemsDefinition = {
-  name: "list_menu_items",
-  description: "Lista os itens disponíveis no cardápio de forma clara e resumida, opcionalmente filtrando por uma palavra-chave",
+  description: "Resumo do pedido com itens, subtotais e total.",
   parameters: z.object({
-    query: z.string().nullable().describe("Palavra-chave para filtrar os itens do menu. Ex: 'café'"),
+    orderId: z.number().int(),
   }),
 };
 
@@ -46,55 +67,130 @@ export const toolDefinitions = [
   listMenuItemsDefinition,
 ];
 
-async function addToOrderImplementation({ name, quantity }: { name: string, quantity: number | null }) {
-  const item = menu.find((m) => m.name.toLowerCase() === name.toLowerCase());
-  if (!item) throw new Error(`Item "${name}" não encontrado no cardápio.`);
-  
-  const prev = order.get(item.name) || { name: item.name, price: item.price, qty: 0 };
-  prev.qty += quantity ?? 1;
-  order.set(item.name, prev);
-  renderOrder();
-  return { success: true, message: `${quantity ?? 1} ${name} adicionado(s) ao pedido.` };
+async function addToOrderImplementation({
+  tableNumber,
+  orderId,
+  menuItemId,
+  quantity,
+}: {
+  tableNumber: string;
+  orderId: number | null;
+  menuItemId: number;
+  quantity: number;
+}) {
+  const order =
+    orderId != null
+      ? await orderService.getById(orderId)
+      : await orderService.findOrCreateOpen(tableNumber);
+
+  const updatedOrder = await orderService.addItem({
+    orderId: order.id,
+    menuItemId,
+    quantity,
+  });
+
+  const summary = await orderService.getSummary(updatedOrder.id);
+
+  return {
+    success: true,
+    message: `${quantity}x adicionado.`,
+    orderId: updatedOrder.id,
+    status: updatedOrder.status,
+    total: updatedOrder.total,
+    items: summary.items,
+  };
 }
 
-async function removeFromOrderImplementation({ name, quantity }: { name: string, quantity: number | null }) {
-  const key = [...order.keys()].find((k) => k.toLowerCase() === name.toLowerCase());
-  if (!key) throw new Error(`Item "${name}" não está no pedido.`);
-  
-  const row = order.get(key)!;
-  const qtyToRemove = quantity ?? 1;
-  row.qty -= qtyToRemove;
-  
-  if (row.qty <= 0) {
-    order.delete(key);
-    renderOrder();
-    return { success: true, message: `Item ${name} removido completamente do pedido.` };
-  } else {
-    order.set(key, row);
-    renderOrder();
-    return { success: true, message: `${qtyToRemove} ${name} removido(s) do pedido. Restam ${row.qty}.` };
-  }
+async function removeFromOrderImplementation({
+  orderId,
+  menuItemId,
+  quantity,
+}: {
+  orderId: number;
+  menuItemId: number;
+  quantity: number;
+}) {
+  const updatedOrder = await orderService.removeItem({ orderId, menuItemId, quantity });
+  const summary = await orderService.getSummary(updatedOrder.id);
+
+  return {
+    success: true,
+    message: `${quantity}x removido.`,
+    orderId: updatedOrder.id,
+    status: updatedOrder.status,
+    total: updatedOrder.total,
+    items: summary.items,
+  };
 }
 
-async function getOrderSummaryImplementation() {
-  const items = [...order.values()].map(({ name, price, qty }) => ({
-    name,
-    price,
-    qty,
-    subtotal: price * qty,
-  }));
-  const total = items.reduce((sum, i) => sum + i.subtotal, 0);
-  return { items, total };
+async function getOrderSummaryImplementation({ orderId }: { orderId: number }) {
+  return orderService.getSummary(orderId);
 }
 
-async function listMenuItemsImplementation({ query }: { query: string | null }) {
+async function listMenuItemsImplementation({
+  query,
+}: {
+  query: string | null;
+}) {
+  const allItems = await menuService.findAll();
+
   const q = query?.toLowerCase() ?? "";
-  const items = menu.filter((m) => !q || m.name.toLowerCase().includes(q));
-  return { items };
+  const filtered = allItems.filter(
+    (item) =>
+      !q ||
+      item.name?.toLowerCase().includes(q) ||
+      item.description?.toLowerCase().includes(q)
+  );
+
+  // map para forma simples (menos tokens na IA)
+  const items = filtered.map((m) => ({
+    id: m.id,
+    name: m.name,
+    description: m.description,
+    price: m.price ? Number(m.price).toFixed(2) : null,
+  }));
+
+  if (items.length === 0) {
+    return {
+      message:
+        query && query.trim() !== ""
+          ? `Nenhum item encontrado para "${query}".`
+          : "Nenhum item encontrado no cardápio.",
+      items: [],
+    };
+  }
+
+  return {
+    message: query
+      ? `Itens encontrados para "${query}":`
+      : "Itens disponíveis no cardápio:",
+    items,
+  };
 }
 
+export async function buildQuickMenuSummary(limit = 10): Promise<string> {
+  const items = await prisma.menuItem.findMany({
+    orderBy: { updatedAt: "desc" },
+    take: limit,
+  });
 
- //serviço para encontrar e executar a função correta
+  if (items.length === 0) {
+    return "O cardápio está vazio no momento.";
+  }
+
+  return (
+    "Cardápio atualizado:\n" +
+    items
+      .map(
+        (item) =>
+          `• ${item.name ?? "Item sem nome"} — R$ ${
+            item.price != null ? Number(item.price).toFixed(2) : "s/ preço"
+          }${item.description ? ` — ${item.description}` : ""}`
+      )
+      .join("\n")
+  );
+}
+
 export const toolImplementations = new Map<string, Function>([
   [addToOrderDefinition.name, addToOrderImplementation],
   [removeFromOrderDefinition.name, removeFromOrderImplementation],
