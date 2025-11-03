@@ -5,7 +5,7 @@ import { menuDTO } from './fixtures/menu-dto';
 export async function seedMenu(prisma: PrismaClient) {
   try {
     for (const item of menuDTO) {
-        await prisma.menu.create({
+        await prisma.menuItem.create({
           data: item,
         });
       }
