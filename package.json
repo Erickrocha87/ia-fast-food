@@ -11,12 +11,16 @@
   "dependencies": {
     "@fastify/cors": "^11.1.0",
     "@fastify/helmet": "^13.0.2",
+    "@fastify/multipart": "^9.3.0",
     "@openai/agents": "^0.1.0",
     "@openai/agents-realtime": "^0.1.0",
     "@prisma/client": "^6.15.0",
     "@prisma/extension-accelerate": "^2.0.2",
+    "fast-csv": "^5.0.5",
     "fastify": "^5.5.0",
+    "fastify-multer": "^2.0.3",
     "openai": "^5.16.0",
+    "papaparse": "^5.5.3",
     "zod": "^3.25.76",
     "zod-to-json-schema": "^3.24.6"
   },

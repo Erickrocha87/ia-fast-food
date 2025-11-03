@@ -6,12 +6,17 @@ import OpenAI from "openai";
 import { appRoutes } from "./routes/chat/chat.routes";
 import { menuRoutes } from "./routes/menu/menu.routes";
 import { orderRoutes } from "./routes/order/order.routes";
+import { csvRoutes } from "./routes/csv/csv.route";
+import fastifyMultipart from "@fastify/multipart";
 
 export class App {
   public server: FastifyInstance;
 
   constructor() {
     this.server = Fastify({ logger: true });
+    this.server.register(fastifyMultipart, {
+      limits: { fileSize: 50 * 1024 * 1024 }, 
+    });
     this.initMiddleware();
     this.initDecorators();
     this.initRoutes();
@@ -34,6 +39,7 @@ export class App {
     await this.server.register(appRoutes);
     await this.server.register(menuRoutes);
     await this.server.register(orderRoutes);
+    await this.server.register(csvRoutes);
   }
 
   public async start() {
