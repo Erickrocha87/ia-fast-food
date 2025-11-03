@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,14 +8,60 @@ datasource db {
 }
 
 
-model Menu {
-  id        Int      @id @default(autoincrement())
-  name      String
-  price     Float
-  description String
-  //image     String
-  //category  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum OrderStatus {
+  Open
+  Canceled
+  Paid
+}
 
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  menuItems MenuItem[]
+}
+
+model Order {
+  id           Int         @id @default(autoincrement())
+  status       OrderStatus @default(Open)
+  total        Float?       @default(0)
+  tableNumber  String?     
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  orderItems   OrderItem[]
+}
+model OrderItem {
+  id       Int @id @default(autoincrement())
+  quantity Int? 
+  price    Float?
+  orderId  Int?
+  order    Order? @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItemId Int?
+  menuItem   MenuItem? @relation(fields: [menuItemId], references: [id])
+
+  @@unique([orderId, menuItemId])
+}
+
+model MenuItem {
+  id          Int       @id @default(autoincrement())
+  name        String?
+  description String?
+  price       Float? 
+  //imageUrl    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  categoryId  Int?
+  category    Category?  @relation(fields: [categoryId], references: [id])
+  orderItems  OrderItem[]
+}
+
+model ChatSession {
+  id             Int      @id @default(autoincrement())
+  tableNumber    String
+  messages       Json    
+  currentOrderId Int?
+  updatedAt      DateTime @updatedAt
+
+  @@index([tableNumber])
 }
