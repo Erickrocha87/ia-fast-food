@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/app/server.ts"
+    "dev": "tsx watch src/server/app.ts"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
     "@fastify/cors": "^11.1.0",
+    "@fastify/helmet": "^13.0.2",
     "@openai/agents": "^0.1.0",
     "@openai/agents-realtime": "^0.1.0",
     "@prisma/client": "^6.15.0",
