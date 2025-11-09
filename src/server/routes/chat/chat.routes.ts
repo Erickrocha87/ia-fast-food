@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyRequest } from "fastify";
+import fastify, { FastifyInstance, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import {
@@ -96,7 +96,10 @@ function maybeUpdateOrderIdFromToolResponse(
 export async function appRoutes(app: FastifyInstance) {
   app.post(
     "/chat",
-    { schema: { body: zodToJsonSchema(chatRequestBodySchema) } },
+    {
+      onRequest: [app.authenticate, app.authorizeRoles(['ADMIN', 'USER'])],
+      schema: { body: zodToJsonSchema(chatRequestBodySchema) },
+    },
     async (req: FastifyRequest<{ Body: ChatRequestBody }>, reply) => {
       console.log("--- Rota /chat acionada ---");
       const { message, tableNumber } = req.body;

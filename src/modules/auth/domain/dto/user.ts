@@ -1,6 +1,6 @@
 import { IUser } from "../model/user.type";
 
-interface UserCreateDTO extends Omit<IUser, "id"> {}
+interface UserCreateDTO extends Omit<IUser, "id" | "role"> {}
 
 interface UserLoginDTO {
   email: string;

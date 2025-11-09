@@ -10,6 +10,7 @@ import { csvRoutes } from "./routes/csv/csv.route";
 import fastifyMultipart from "@fastify/multipart";
 import fastifyJwt from "fastify-jwt";
 import { authRoutes } from "./routes/auth/auth.routes";
+import authPlugin from "../common/utils/authorize-role";
 
 export class App {
   public server: FastifyInstance;
@@ -19,15 +20,14 @@ export class App {
     this.server.register(fastifyMultipart, {
       limits: { fileSize: 50 * 1024 * 1024 },
     });
-    this.initMiddleware();
+
     this.initDecorators();
-    this.initRoutes();
-    this.registerJWT();
   }
 
   private async initMiddleware() {
     await this.server.register(cors, { origin: true });
     await this.server.register(helmet);
+    await this.server.register(authPlugin);
   }
 
   private initDecorators() {
@@ -42,9 +42,6 @@ export class App {
     const secret = process.env.JWT_SECRET!;
     this.server.register(fastifyJwt, {
       secret: secret,
-      sign: {
-        expiresIn: "7d",
-      },
     });
   }
 
@@ -58,6 +55,9 @@ export class App {
 
   public async start() {
     try {
+      await this.registerJWT();
+      await this.initMiddleware();
+      await this.initRoutes();
       await this.server.listen({ port: 1337 });
       console.log("Server rodando em: http://localhost:1337");
     } catch (err) {

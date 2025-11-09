@@ -1,6 +1,20 @@
 -- CreateEnum
 CREATE TYPE "public"."OrderStatus" AS ENUM ('Open', 'Canceled', 'Paid');
 
+-- CreateEnum
+CREATE TYPE "public"."UserRole" AS ENUM ('ADMIM', 'USER');
+
+-- CreateTable
+CREATE TABLE "public"."User" (
+    "id" SERIAL NOT NULL,
+    "email" TEXT NOT NULL,
+    "restaurantName" TEXT,
+    "password" TEXT,
+    "role" "public"."UserRole" DEFAULT 'USER',
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateTable
 CREATE TABLE "public"."Category" (
     "id" SERIAL NOT NULL,
@@ -55,6 +69,9 @@ CREATE TABLE "public"."ChatSession" (
 
     CONSTRAINT "ChatSession_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "public"."User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Category_name_key" ON "public"."Category"("name");

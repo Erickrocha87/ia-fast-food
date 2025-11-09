@@ -5,17 +5,12 @@ import { authUserSchema, createUserSchema } from "../schema/user.schema";
 import { AuthRepository } from "../insfrastructure/prisma/auth.repository";
 
 export class AuthController {
+  constructor(private authRepository: AuthRepository) {}
 
-  constructor(private authRepository: AuthRepository) {
-    this.authRepository = authRepository;
-  }
-  async createUser(req: FastifyRequest, res: FastifyReply) {
-    const { email, restaurantName, password } = createUserSchema.parse(
-      req.body
-    );
+  createUser = async (req: FastifyRequest, res: FastifyReply) => {
+    const { email, restaurantName, password } = createUserSchema.parse(req.body);
 
     const existUser = await this.authRepository.findUserByEmail(email);
-
     if (existUser) {
       return res.status(409).send({ message: "User already exists" });
     }
@@ -29,13 +24,12 @@ export class AuthController {
     });
 
     res.status(201).send(user);
-  }
+  };
 
-  async login(req: FastifyRequest, res: FastifyReply) {
+  login = async (req: FastifyRequest, res: FastifyReply) => {
     const { email, password } = authUserSchema.parse(req.body);
 
     const user = await this.authRepository.findUserByEmail(email);
-
     if (!user) {
       return res.status(409).send({ message: "User not found" });
     }
@@ -46,8 +40,9 @@ export class AuthController {
       return res.status(401).send({ message: "Invalid password" });
     }
 
-    const token = res.jwt.sign({ id: user.id, email: user.email });
-
+    const tokenPayload = { id: user.id, email: user.email, role: user.role };
+    const token = await res.jwtSign(tokenPayload, { expiresIn: "7d" });
+    
     return res.status(200).send({ token });
-  }
+  };
 }
