@@ -97,7 +97,6 @@ export async function appRoutes(app: FastifyInstance) {
   app.post(
     "/chat",
     {
-      onRequest: [app.authenticate, app.authorizeRoles(['ADMIN', 'USER'])],
       schema: { body: zodToJsonSchema(chatRequestBodySchema) },
     },
     async (req: FastifyRequest<{ Body: ChatRequestBody }>, reply) => {
@@ -246,7 +245,7 @@ ${quickMenu}
         const { text } = req.body;
 
         const mp3 = await app.openai.audio.speech.create({
-          model: "tts-1-hd",
+          model: "tts-1",
           voice: "alloy",
           input: text,
           speed: 0.9,

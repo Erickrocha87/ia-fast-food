@@ -11,6 +11,9 @@ import fastifyMultipart from "@fastify/multipart";
 import fastifyJwt from "fastify-jwt";
 import { authRoutes } from "./routes/auth/auth.routes";
 import authPlugin from "../common/utils/authorize-role";
+import { pixRoutes } from "./routes/pix/pix.route";
+import { realtimeRoutes } from "./realtime/realtime.route";
+import websocketPlugin from "@fastify/websocket";
 
 export class App {
   public server: FastifyInstance;
@@ -19,6 +22,12 @@ export class App {
     this.server = Fastify({ logger: true });
     this.server.register(fastifyMultipart, {
       limits: { fileSize: 50 * 1024 * 1024 },
+    });
+
+    this.server.register(websocketPlugin, {
+      options: {
+        maxPayload: 10485760
+      }
     });
 
     this.initDecorators();
@@ -51,6 +60,8 @@ export class App {
     await this.server.register(orderRoutes);
     await this.server.register(csvRoutes);
     await this.server.register(authRoutes);
+    await this.server.register(pixRoutes);
+    await this.server.register(realtimeRoutes);
   }
 
   public async start() {
