@@ -3,7 +3,6 @@ import helmet from "@fastify/helmet";
 import cors from "@fastify/cors";
 import "dotenv/config";
 import OpenAI from "openai";
-import { appRoutes } from "./routes/chat/chat.routes";
 import { menuRoutes } from "./routes/menu/menu.routes";
 import { orderRoutes } from "./routes/order/order.routes";
 import { csvRoutes } from "./routes/csv/csv.route";
@@ -11,10 +10,8 @@ import fastifyMultipart from "@fastify/multipart";
 import fastifyJwt from "fastify-jwt";
 import { authRoutes } from "./routes/auth/auth.routes";
 import authPlugin from "../common/utils/authorize-role";
-import { pixRoutes } from "./routes/pix/pix.route";
-import { realtimeRoutes } from "./realtime/realtime.route";
 import websocketPlugin from "@fastify/websocket";
-import { realtimeWebRTCRoutes } from "./routes/realtime-webrtc";
+import { realtimeWebRTCRoutes } from "./routes/realtime/realtime-webrtc";
 
 export class App {
   public server: FastifyInstance;
@@ -56,13 +53,10 @@ export class App {
   }
 
   private async initRoutes() {
-    await this.server.register(appRoutes);
     await this.server.register(menuRoutes);
     await this.server.register(orderRoutes);
     await this.server.register(csvRoutes);
     await this.server.register(authRoutes);
-    await this.server.register(pixRoutes);
-    await this.server.register(realtimeRoutes);
     await this.server.register(realtimeWebRTCRoutes);
   }
 
