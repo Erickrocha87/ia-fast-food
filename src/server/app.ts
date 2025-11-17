@@ -14,6 +14,7 @@ import authPlugin from "../common/utils/authorize-role";
 import { pixRoutes } from "./routes/pix/pix.route";
 import { realtimeRoutes } from "./realtime/realtime.route";
 import websocketPlugin from "@fastify/websocket";
+import { sessionRoutes } from "./routes/session";
 
 export class App {
   public server: FastifyInstance;
@@ -62,6 +63,7 @@ export class App {
     await this.server.register(authRoutes);
     await this.server.register(pixRoutes);
     await this.server.register(realtimeRoutes);
+    await this.server.register(sessionRoutes)
   }
 
   public async start() {

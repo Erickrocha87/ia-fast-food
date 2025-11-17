@@ -18,24 +18,37 @@ export async function realtimeRoutes(app: FastifyInstance) {
 
       client.send(
         JSON.stringify({
-          type: "setup",
+          type: "response.create",
+          modalities: ["audio", "text"],
+          instructions: "Você é um atendente educado, claro e rápido.",
+          audio: {
+            voice: "alloy",
+            // Este formato de SAÍDA (mp3) está correto
+            format: "mp3",
+          },
           tools: mapToolsToRealtime(),
         })
       );
     });
 
-    let hasAudio = false;
-
     // OPENAI → FRONT
     client.on("message", (raw: any) => {
-      const text = raw.toString();
-
-      if (!text.startsWith("{")) {
+      if (Buffer.isBuffer(raw)) {
+        console.log("Recebi áudio binário da OpenAI");
         socket.send(raw, { binary: true });
         return;
       }
 
-      const event = JSON.parse(text);
+      const text = raw.toString();
+      console.log("📩 EVENTO DO OPENAI (TEXTO):", text);
+
+      let event;
+      try {
+        event = JSON.parse(text);
+      } catch (e) {
+        console.warn("Não foi possível parsear evento da OpenAI:", text);
+        return;
+      }
 
       if (event.type === "response.output_text.delta") {
         socket.send(
@@ -48,15 +61,13 @@ export async function realtimeRoutes(app: FastifyInstance) {
           client.send(
             JSON.stringify({
               type: "response.create",
-              response: {
-                output: [
-                  {
-                    type: "function_call_result",
-                    name: event.name,
-                    content: JSON.stringify(result),
-                  },
-                ],
-              },
+              output: [
+                {
+                  type: "function_call_result",
+                  name: event.name,
+                  content: JSON.stringify(result),
+                },
+              ],
             })
           );
         });
@@ -65,11 +76,9 @@ export async function realtimeRoutes(app: FastifyInstance) {
 
     // FRONT → OPENAI
     socket.on("message", async (raw) => {
-      console.log("RAW DO CLIENTE:", raw.toString().slice(0, 100));
       let data;
       try {
         data = JSON.parse(raw.toString());
-        console.log(data.type);
       } catch {
         return;
       }
@@ -78,16 +87,12 @@ export async function realtimeRoutes(app: FastifyInstance) {
         client.send(JSON.stringify({ type: "input_text", text: data.text }));
       }
 
+      // Os dados de 'audio' agora são Base64 de PCM16 puro
       if (data.type === "user_audio_chunk") {
-        console.log("🔵 RECEBI CHUNK DO FRONT, tamanho:", data.audio.length);
-        hasAudio = true;
         client.send(
           JSON.stringify({
             type: "input_audio_buffer.append",
-            audio: {
-              data: data.audio, // base64
-              format: "opus",
-            },
+            audio: data.audio,
           })
         );
       }
@@ -98,21 +103,6 @@ export async function realtimeRoutes(app: FastifyInstance) {
         client.send(
           JSON.stringify({
             type: "input_audio_buffer.commit",
-          })
-        );
-
-        // 🔥 ISSO AQUI FALTAVA
-        client.send(
-          JSON.stringify({
-            type: "response.create",
-            response: {
-              modalities: ["audio", "text"],
-              instructions: "Responda educadamente e rápido.",
-              audio: {
-                voice: "alloy",
-                format: "opus",
-              },
-            },
           })
         );
       }

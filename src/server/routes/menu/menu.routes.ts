@@ -10,7 +10,7 @@ const menuRoutes = (app: FastifyInstance) => {
 
   app.get(
     "/menu",
-    { onRequest: [app.authenticate, app.authorizeRoles(["ADMIN", "USER"])] },
+    // { onRequest: [app.authenticate, app.authorizeRoles(["ADMIN", "USER"])] },
     menuController.findAll
   );
 };
