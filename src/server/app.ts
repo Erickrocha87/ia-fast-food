@@ -12,6 +12,8 @@ import { authRoutes } from "./routes/auth/auth.routes";
 import authPlugin from "../common/utils/authorize-role";
 import websocketPlugin from "@fastify/websocket";
 import { realtimeWebRTCRoutes } from "./routes/realtime/realtime-webrtc";
+import { orderKitchenRoutes } from "./routes/kitchen/orders";
+import { dashboardRoutes } from "./routes/dashboard/dashboard.route";
 
 export class App {
   public server: FastifyInstance;
@@ -32,10 +34,15 @@ export class App {
   }
 
   private async initMiddleware() {
-    await this.server.register(cors, { origin: true });
+    await this.server.register(cors, {
+      origin: "*",
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    });
+
     await this.server.register(helmet);
     await this.server.register(authPlugin);
   }
+
 
   private initDecorators() {
     const openai = new OpenAI({
@@ -58,6 +65,8 @@ export class App {
     await this.server.register(csvRoutes);
     await this.server.register(authRoutes);
     await this.server.register(realtimeWebRTCRoutes);
+    await this.server.register(orderKitchenRoutes);
+    await this.server.register(dashboardRoutes);
   }
 
   public async start() {
