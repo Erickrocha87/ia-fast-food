@@ -11,7 +11,8 @@ import fastifyJwt from "fastify-jwt";
 import { authRoutes } from "./routes/auth/auth.routes";
 import authPlugin from "../common/utils/authorize-role";
 import websocketPlugin from "@fastify/websocket";
-import { realtimeWebRTCRoutes } from "./routes/realtime/realtime-webrtc";
+import { realtimeWebRTCRoutes } from "./routes/realtime/realtime-webrtc.routes";
+import { stripeRoutes } from "./routes/stripe/stripe.routes";
 
 export class App {
   public server: FastifyInstance;
@@ -58,6 +59,7 @@ export class App {
     await this.server.register(csvRoutes);
     await this.server.register(authRoutes);
     await this.server.register(realtimeWebRTCRoutes);
+    await this.server.register(stripeRoutes);
   }
 
   public async start() {

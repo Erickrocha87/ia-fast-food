@@ -11,7 +11,7 @@ const menuRoutes = (app: FastifyInstance) => {
   app.get(
     "/menu",
     // { onRequest: [app.authenticate, app.authorizeRoles(["ADMIN", "USER"])] },
-    menuController.findAll
+    menuController.menuService.getAllMenuItemsCached
   );
 };
 

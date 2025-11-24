@@ -1,9 +1,9 @@
+// src/modules/tools/services/index.ts (ou arquivo equivalente)
 import { prisma } from "src/infrastructure/database";
 import { PrismaMenuRepository } from "src/modules/menu/infrastructure/prisma/repositories/prisma-menu-repository";
 import { MenuService } from "src/modules/menu/services/menu.service";
 import { PrismaOrderRepository } from "src/modules/order/infrastructure/prisma/repository/prisma-order-repository";
 import { OrderService } from "src/modules/order/services/order.service";
-import { IOrderItemRepository } from "src/modules/orderItem/domain/repository/order-item.repository";
 import { PrismaOrderItemRepository } from "src/modules/orderItem/infrastructure/prisma/repository/prisma-order-item.repository";
 
 const orderItemRepository = new PrismaOrderItemRepository(prisma);
@@ -13,23 +13,24 @@ const orderService = new OrderService(
   orderRepository,
   orderItemRepository
 );
+
 const menuRepository = new PrismaMenuRepository(prisma);
 const menuService = new MenuService(menuRepository);
 
 export const restaurantTools = {
   add_to_order: async ({ tableNumber, menuItemId, quantity }) => {
-    if (!tableNumber) return { ok: false, error: "tableNumber é obrigatório" };
-    if (!menuItemId) return { ok: false, error: "menuItemId é obrigatório" };
+    if (!tableNumber) return { ok: false, message: "Mesa inválida." };
+    if (!menuItemId) return { ok: false, message: "Item inválido." };
 
     const qty = Number(quantity || 1);
-    if (qty <= 0) return { ok: false, error: "Quantidade inválida" };
+    if (qty <= 0) return { ok: false, message: "Quantidade inválida." };
 
     const order = await orderService.findOrCreateOpen(String(tableNumber));
 
     const item = await prisma.menuItem.findUnique({
       where: { id: Number(menuItemId) },
     });
-    if (!item) return { ok: false, error: "Item do cardápio não existe" };
+    if (!item) return { ok: false, message: "Item do cardápio não existe." };
 
     await orderService.addItem({
       orderId: order.id,
@@ -37,16 +38,24 @@ export const restaurantTools = {
       quantity: qty,
     });
 
-    return { ok: true, message: `Adicionado ${qty}x ${item.name}` };
+    return {
+      ok: true,
+      message: `Adicionei ${qty}x ${item.name} ao seu pedido.`,
+      orderId: order.id,
+    };
   },
 
   remove_from_order: async ({ tableNumber, menuItemId, quantity }) => {
-    if (!tableNumber) return { ok: false, error: "tableNumber é obrigatório" };
-    if (!menuItemId) return { ok: false, error: "menuItemId é obrigatório" };
+    if (!tableNumber) return { ok: false, message: "Mesa inválida." };
+    if (!menuItemId) return { ok: false, message: "Item inválido." };
 
     const qty = Number(quantity || 1);
 
     const order = await orderService.findOrCreateOpen(String(tableNumber));
+
+    const item = await prisma.menuItem.findUnique({
+      where: { id: Number(menuItemId) },
+    });
 
     await orderService.removeItem({
       orderId: order.id,
@@ -54,27 +63,141 @@ export const restaurantTools = {
       quantity: qty,
     });
 
-    return { ok: true };
+    if (!item) {
+      return {
+        ok: true,
+        message: `Atualizei a quantidade do item selecionado no seu pedido.`,
+        orderId: order.id,
+      };
+    }
+
+    return {
+      ok: true,
+      message: `Removi ${qty}x ${item.name} do seu pedido.`,
+      orderId: order.id,
+    };
   },
 
   get_order_summary: async ({ tableNumber }) => {
-    if (!tableNumber) return { ok: false, error: "tableNumber é obrigatório" };
+    if (!tableNumber) return { ok: false, message: "Mesa inválida." };
 
     const order = await orderService.findOrCreateOpen(String(tableNumber));
     const summary = await orderService.getSummary(order.id);
 
-    return summary;
+    const items = summary.items || [];
+    const total = summary.total || 0;
+
+    if (!items.length) {
+      return {
+        ok: true,
+        message: `No momento o pedido da mesa ${tableNumber} está vazio.`,
+        summary,
+        orderId: order.id,
+      };
+    }
+
+    const itensTexto = items
+      .map((i: any) => `${i.quantity}x ${i.name}`)
+      .join(", ");
+
+    const totalFormatado = Number(total)
+      .toFixed(2)
+      .replace(".", ",");
+
+    const message = `Seu pedido atual tem ${items.length} item(ns): ${itensTexto}. O total é R$ ${totalFormatado}.`;
+
+    return {
+      ok: true,
+      message,
+      summary,
+      orderId: order.id,
+    };
   },
 
   list_menu_items: async ({ query }) => {
     const q = String(query || "").toLowerCase();
 
-    const items = await prisma.menuItem.findMany();
+    const items = await menuService.getAllMenuItemsCached();
 
     const filtered = q
-      ? items.filter((i) => i.name?.toLowerCase().includes(q))
+      ? items.filter(
+          (i: any) =>
+            i.name?.toLowerCase().includes(q) ||
+            i.description?.toLowerCase().includes(q)
+        )
       : items;
 
-    return { items: filtered };
+    if (!filtered.length) {
+      return {
+        ok: true,
+        message: `Não encontrei itens para "${q || "cardápio"}".`,
+        items: [],
+      };
+    }
+
+    const nomes = filtered.map((i: any) => i.name).join(", ");
+    const message = q
+      ? `As opções de ${q} são: ${nomes}.`
+      : `No cardápio temos: ${nomes}.`;
+
+    return {
+      ok: true,
+      message,
+      items: filtered,
+    };
   },
 };
+
+export const toolDefinitions = [
+  {
+    type: "function",
+    name: "add_to_order",
+    description: "Adiciona um item no pedido da mesa.",
+    parameters: {
+      type: "object",
+      properties: {
+        tableNumber: { type: "string" },
+        menuItemId: { type: "number" },
+        quantity: { type: "number" },
+      },
+      required: ["tableNumber", "menuItemId"],
+    },
+  },
+  {
+    type: "function",
+    name: "remove_from_order",
+    description: "Remove quantidade de um item do pedido.",
+    parameters: {
+      type: "object",
+      properties: {
+        tableNumber: { type: "string" },
+        menuItemId: { type: "number" },
+        quantity: { type: "number" },
+      },
+      required: ["tableNumber", "menuItemId"],
+    },
+  },
+  {
+    type: "function",
+    name: "get_order_summary",
+    description: "Retorna resumo completo do pedido da mesa.",
+    parameters: {
+      type: "object",
+      properties: {
+        tableNumber: { type: "string" },
+      },
+      required: ["tableNumber"],
+    },
+  },
+  {
+    type: "function",
+    name: "list_menu_items",
+    description: "Lista itens do cardápio, opcionalmente filtrados.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: { type: "string" },
+      },
+    },
+  },
+];
