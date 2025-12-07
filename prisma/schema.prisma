@@ -7,7 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 enum OrderStatus {
   Open
   Canceled
@@ -19,36 +18,101 @@ enum UserRole {
   USER
 }
 
+enum BillingPeriod {
+  MENSAL
+  ANUAL
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  EXPIRED
+}
+
 model User {
-  id              Int      @id @default(autoincrement())
-  email           String   @unique
-  restaurantName  String?
-  password        String?
-  role            UserRole? @default(USER)
+  id             Int       @id @default(autoincrement())
+  email          String    @unique
+  restaurantName String?
+  password       String?
+  role           UserRole? @default(USER)
+
+  // Relação com assinatura atual
+  subscriptions Subscription[]
+}
+
+model Plan {
+  id          Int     @id @default(autoincrement())
+  slug        String  @unique // "basico", "profissional", "premium"
+  name        String // "Básico", etc
+  description String?
+
+  // Limites do plano
+  tokensPerMonth Int // ex: 500_000, 1_800_000, 5_000_000
+  maxTablets     Int? // null = ilimitado
+
+  // Preços em centavos (pra evitar float)
+  priceMonthly Int // 12990 = 129,90
+  priceYearly  Int // 129990 = 1299,90
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id Int @id @default(autoincrement())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  planId Int
+  plan   Plan @relation(fields: [planId], references: [id])
+
+  billingPeriod BillingPeriod // MENSAL ou ANUAL
+  status        SubscriptionStatus @default(ACTIVE)
+
+  // Controle de tokens no ciclo atual
+  tokensLimit Int // quantos tokens o ciclo permite (ex: 500_000)
+  tokensUsed  Int @default(0)
+
+  cycleStart DateTime // início do ciclo atual
+  cycleEnd   DateTime // fim do ciclo atual
+
+  // Campos Stripe pra futuro (se quiser usar subscription de verdade)
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([planId])
 }
 
 model Category {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
   menuItems MenuItem[]
 }
 
 model Order {
-  id           Int         @id @default(autoincrement())
-  status       OrderStatus @default(Open)
-  total        Float?       @default(0)
-  tableNumber  String?     
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id          Int         @id @default(autoincrement())
+  status      OrderStatus @default(Open)
+  total       Float?      @default(0)
+  tableNumber String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
-  orderItems   OrderItem[]
+  orderItems OrderItem[]
 }
+
 model OrderItem {
-  id       Int @id @default(autoincrement())
-  quantity Int? 
-  price    Float?
-  orderId  Int?
-  order    Order? @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id         Int       @id @default(autoincrement())
+  quantity   Int?
+  price      Float?
+  orderId    Int?
+  order      Order?    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   menuItemId Int?
   menuItem   MenuItem? @relation(fields: [menuItemId], references: [id])
 
@@ -56,23 +120,22 @@ model OrderItem {
 }
 
 model MenuItem {
-  id          Int       @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   name        String?
   description String?
-  price       Float? 
-  //imageUrl    String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  price       Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  categoryId  Int?
-  category    Category?  @relation(fields: [categoryId], references: [id])
-  orderItems  OrderItem[]
+  categoryId Int?
+  category   Category?   @relation(fields: [categoryId], references: [id])
+  orderItems OrderItem[]
 }
 
 model ChatSession {
   id             Int      @id @default(autoincrement())
   tableNumber    String
-  messages       Json    
+  messages       Json
   currentOrderId Int?
   updatedAt      DateTime @updatedAt
 

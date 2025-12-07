@@ -40,9 +40,10 @@ export class AuthController {
       return res.status(401).send({ message: "Invalid password" });
     }
 
-    const tokenPayload = { id: user.id, email: user.email, role: user.role };
+    const tokenPayload = { id: user.id, userName: user.restaurantName , email: user.email, role: user.role };
     const token = await res.jwtSign(tokenPayload, { expiresIn: "7d" });
     
+    console.log("AAAAAAAAAAAAA", token);
     return res.status(200).send({ token });
   };
 }
