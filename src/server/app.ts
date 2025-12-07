@@ -15,6 +15,9 @@ import { realtimeWebRTCRoutes } from "./routes/realtime/realtime-webrtc.routes";
 import { stripeRoutes } from "./routes/stripe/stripe.routes";
 import { orderKitchenRoutes } from "./routes/kitchen/orders";
 import { dashboardRoutes } from "./routes/dashboard/dashboard.route";
+import { planRoutes } from "./routes/billing/plan.routes";
+import { subscriptionRoutes } from "./routes/billing/subscription.routes";
+import { userRoutes } from "./routes/user/user.routes";
 
 export class App {
   public server: FastifyInstance;
@@ -44,7 +47,6 @@ export class App {
     await this.server.register(authPlugin);
   }
 
-
   private initDecorators() {
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
@@ -68,7 +70,10 @@ export class App {
     await this.server.register(realtimeWebRTCRoutes);
     await this.server.register(orderKitchenRoutes);
     await this.server.register(dashboardRoutes);
+    await this.server.register(planRoutes);
     await this.server.register(stripeRoutes);
+    await this.server.register(subscriptionRoutes);
+    await this.server.register(userRoutes);
   }
 
   public async start() {
