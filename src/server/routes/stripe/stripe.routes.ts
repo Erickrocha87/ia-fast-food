@@ -31,16 +31,18 @@ export async function stripeRoutes(app: FastifyInstance) {
       }
 
       const isMensal = tipo === "mensal";
-      
-      const baseAmount = isMensal ? plan.priceMonthly : plan.priceYearly;
 
-      if (baseAmount == null) {
+      const baseAmountInCents = isMensal
+        ? plan.priceMonthly
+        : plan.priceYearly;
+
+      if (baseAmountInCents == null) {
         return reply
           .status(400)
           .send({ error: "Valor do plano não configurado." });
       }
 
-      const unitAmount = Math.round(Number(baseAmount) * 100); 
+      const unitAmount = Number(baseAmountInCents);
 
       const SUCCESS_URL = `http://localhost:3000/sucesso?plano=${encodeURIComponent(
         plano
@@ -78,7 +80,7 @@ export async function stripeRoutes(app: FastifyInstance) {
                   } com renovação automática`,
                 ].join("\n"),
               },
-              unit_amount: unitAmount,
+              unit_amount: unitAmount, 
             },
             quantity: 1,
           },
