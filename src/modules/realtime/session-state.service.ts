@@ -1,16 +1,13 @@
-// src/modules/realtime/session-state.service.ts
 import { redis } from "src/infrastructure/redis/redis";
 
 export interface TableSessionState {
   tableNumber: string;
   currentOrderId: number | null;
-  summary: string | null;   // memória resumida da mesa (pra IA)
-  updatedAt: number;        // timestamp em ms
+  summary: string | null;   
+  updatedAt: number;   
 }
 
-// =======================
-// Helpers de chave
-// =======================
+
 function base(tableNumber: string, suffix: string) {
   return `serveai:table:${tableNumber}:${suffix}`;
 }
@@ -31,10 +28,6 @@ function toolCacheKey(key: string) {
   return `toolcache:${key}`;
 }
 
-// =======================
-// Estado principal da mesa
-// =======================
-
 export async function getTableState(
   tableNumber: string
 ): Promise<TableSessionState | null> {
@@ -51,14 +44,9 @@ export async function getTableState(
 export async function saveTableState(
   state: TableSessionState
 ): Promise<void> {
-  // TTL padrão de 1h para o estado da mesa
   await redis.set(stateKey(state.tableNumber), JSON.stringify(state), "EX", 3600);
 }
 
-/**
- * Atualiza parcialmente o estado da mesa.
- * Mantém os campos existentes e sobrescreve só o que vier no patch.
- */
 export async function updateTableState(
   tableNumber: string,
   patch: Partial<Omit<TableSessionState, "tableNumber">>
@@ -81,10 +69,6 @@ export async function updateTableState(
   return next;
 }
 
-// =======================
-// Memória resumida (summary)
-// =======================
-
 export async function setTableSummary(
   tableNumber: string,
   summary: string
@@ -99,10 +83,6 @@ export async function getTableSummary(
   return (await redis.get(summaryKey(tableNumber))) as string | null;
 }
 
-// =======================
-// Última transcrição de áudio
-// =======================
-
 export async function setLastTranscript(
   tableNumber: string,
   text: string
@@ -116,14 +96,6 @@ export async function getLastTranscript(
   return (await redis.get(lastTranscriptKey(tableNumber))) as string | null;
 }
 
-// =======================
-// Cache genérico de tools
-// =======================
-
-/**
- * Se chamar só com `key`, ele lê do cache.
- * Se passar `value`, ele grava no cache (TTL 1h) e retorna o mesmo value.
- */
 export async function toolCache<T = any>(
   key: string,
   value?: T

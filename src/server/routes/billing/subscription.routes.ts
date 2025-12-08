@@ -1,4 +1,3 @@
-// src/modules/billing/routes/subscription.routes.ts
 import { FastifyInstance } from "fastify";
 import { prisma } from "src/infrastructure/database";
 import { BillingPeriod, SubscriptionStatus } from "@prisma/client";
@@ -10,7 +9,7 @@ export async function subscriptionRoutes(app: FastifyInstance) {
       preHandler: [app.authenticate],
     },
     async (req, reply) => {
-      const user = req.user; // vem do JWT
+      const user = req.user; 
       const { planSlug, tipo } = req.body as {
         planSlug: string;
         tipo: "mensal" | "anual";
@@ -73,7 +72,7 @@ export async function subscriptionRoutes(app: FastifyInstance) {
   app.get(
     "/me/subscription",
     {
-      preHandler: [app.authenticate], // ⬅️ aqui também
+      preHandler: [app.authenticate],
     },
     async (req, reply) => {
       const user = req.user;

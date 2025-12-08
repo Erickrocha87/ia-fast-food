@@ -2,7 +2,6 @@ import { FastifyInstance } from "fastify";
 import { prisma } from "src/infrastructure/database";
 
 export async function tableRoutes(app: FastifyInstance) {
-  // Lista todas as mesas
   app.get("/tables", async (req, reply) => {
     try {
       const tables = await prisma.table.findMany({
@@ -16,7 +15,6 @@ export async function tableRoutes(app: FastifyInstance) {
     }
   });
 
-  // Cria uma mesa
   app.post("/tables", async (req, reply) => {
     try {
       const body = req.body as { name?: string };
@@ -26,7 +24,6 @@ export async function tableRoutes(app: FastifyInstance) {
         return reply.status(400).send({ error: "Nome/numero da mesa é obrigatório." });
       }
 
-      // garante unicidade
       const exists = await prisma.table.findUnique({
         where: { name },
       });
@@ -45,7 +42,6 @@ export async function tableRoutes(app: FastifyInstance) {
     }
   });
 
-  // Remove mesa (soft delete simples usando active=false ou delete direto)
   app.delete("/tables/:id", async (req, reply) => {
     try {
       const { id } = req.params as { id: string };
@@ -55,7 +51,6 @@ export async function tableRoutes(app: FastifyInstance) {
         return reply.status(400).send({ error: "ID inválido" });
       }
 
-      // se quiser só desativar:
       // const table = await prisma.table.update({
       //   where: { id: tableId },
       //   data: { active: false },

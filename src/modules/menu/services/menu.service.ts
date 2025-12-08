@@ -1,4 +1,3 @@
-// src/modules/menu/services/menu.service.ts
 import { MenuInputDTO } from "../domain/dto/menu.dto";
 import { IMenuRepository } from "../domain/repositories/menu.repository";
 import { prisma } from "src/infrastructure/database";
@@ -15,7 +14,6 @@ class MenuService {
 
   create = async (data: MenuInputDTO) => {
     const createdMenu = await this.menuRepository.create(data);
-    // invalida cache do menu ao criar item
     await this.invalidateMenuCache();
     return createdMenu;
   };

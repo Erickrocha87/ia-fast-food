@@ -1,4 +1,3 @@
-// src/modules/realtime/summary.service.ts
 import OpenAI from "openai";
 import {
   getLastTranscript,
@@ -10,10 +9,6 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
 
-/**
- * Atualiza o summary da mesa com base na última fala da IA.
- * Usa modelo barato só pra comprimir contexto.
- */
 export async function updateSummaryFromTranscript(
   tableNumber: string
 ): Promise<string | null> {

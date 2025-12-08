@@ -1,4 +1,3 @@
-// src/modules/billing/routes/token-usage.routes.ts
 import { FastifyInstance } from "fastify";
 import { prisma } from "src/infrastructure/database";
 
@@ -6,7 +5,7 @@ export async function tokenUsageRoutes(app: FastifyInstance) {
   app.post(
     "/usage/tokens",
     {
-      preHandler: [app.authenticate], // precisa do JWT
+      preHandler: [app.authenticate], 
     },
     async (req, reply) => {
 
@@ -20,13 +19,11 @@ export async function tokenUsageRoutes(app: FastifyInstance) {
       }
 
       try {
-        // assinatura ativa do usuário
         const subscription = await prisma.subscription.findFirst({
           where: { userId: user.id, status: "ACTIVE" },
         });
 
         if (!subscription) {
-          // sem plano, você pode só ignorar ou logar
           return reply.send({ ok: true, ignored: true });
         }
 

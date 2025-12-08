@@ -8,7 +8,6 @@ type NormalizedItem = {
 };
 
 function normalizeItem(row: any): NormalizedItem | null {
-  // Tenta achar o nome em vários campos possíveis
   const nameField =
     row.name ??
     row.nome ??
@@ -16,7 +15,6 @@ function normalizeItem(row: any): NormalizedItem | null {
     row.nome_produto ??
     row["nome_do_produto"];
 
-  // Tenta achar o preço em vários campos possíveis
   const priceField =
     row.price ??
     row.preco ??
@@ -39,7 +37,6 @@ function normalizeItem(row: any): NormalizedItem | null {
 
   const name = String(nameField).trim();
 
-  // Normaliza preço: remove R$, pontos de milhar, troca vírgula por ponto
   const priceStr = String(priceField)
     .replace("R$", "")
     .replace(/\s/g, "")

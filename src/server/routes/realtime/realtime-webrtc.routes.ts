@@ -1,4 +1,3 @@
-// src/modules/realtime/routes/realtime-webrtc.routes.ts
 import { FastifyInstance } from "fastify";
 import {
   updateTableState,
@@ -9,7 +8,6 @@ import { updateSummaryFromTranscript } from "src/modules/realtime/summary.servic
 import { restaurantTools, toolDefinitions } from "src/modules/tools/services";
 
 export async function realtimeWebRTCRoutes(app: FastifyInstance) {
-  // 1) Criação de sessão realtime (client_secret)
   app.get("/session", async (req, reply) => {
     try {
       const r = await fetch("https://api.openai.com/v1/realtime/sessions", {
@@ -39,7 +37,6 @@ export async function realtimeWebRTCRoutes(app: FastifyInstance) {
     }
   });
 
-  // 2) Execução das tools
   app.post("/tool-call", async (req, reply) => {
     const { name, args } = req.body as any;
     const tableNumber: string | undefined = args?.tableNumber;
@@ -62,7 +59,6 @@ export async function realtimeWebRTCRoutes(app: FastifyInstance) {
           currentOrderId: orderIdFromTool,
         });
 
-        // se quiser manter summary:
         await updateSummaryFromTranscript(tableNumber);
       }
 
@@ -76,7 +72,6 @@ export async function realtimeWebRTCRoutes(app: FastifyInstance) {
     }
   });
 
-  // 3) Receber transcrição para summary (opcional, mas deixei)
   app.post("/transcript", async (req, reply) => {
     const { tableNumber, text } = req.body as any;
 
@@ -97,7 +92,6 @@ export async function realtimeWebRTCRoutes(app: FastifyInstance) {
     }
   });
 
-  // 4) Expor summary atual da mesa
   app.get("/summary/:tableNumber", async (req, reply) => {
     const { tableNumber } = req.params as any;
 

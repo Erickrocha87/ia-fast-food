@@ -36,24 +36,20 @@ model User {
   restaurantName String?
   password       String?
   role           UserRole? @default(USER)
-
-  // Relação com assinatura atual
   subscriptions Subscription[]
 }
 
 model Plan {
   id          Int     @id @default(autoincrement())
-  slug        String  @unique // "basico", "profissional", "premium"
-  name        String // "Básico", etc
+  slug        String  @unique
+  name        String 
   description String?
 
-  // Limites do plano
-  tokensPerMonth Int // ex: 500_000, 1_800_000, 5_000_000
-  maxTablets     Int? // null = ilimitado
+  tokensPerMonth Int 
+  maxTablets     Int? 
 
-  // Preços em centavos (pra evitar float)
-  priceMonthly Int // 12990 = 129,90
-  priceYearly  Int // 129990 = 1299,90
+  priceMonthly Int 
+  priceYearly  Int 
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -70,17 +66,16 @@ model Subscription {
   planId Int
   plan   Plan @relation(fields: [planId], references: [id])
 
-  billingPeriod BillingPeriod // MENSAL ou ANUAL
+  billingPeriod BillingPeriod 
   status        SubscriptionStatus @default(ACTIVE)
 
-  // Controle de tokens no ciclo atual
-  tokensLimit Int // quantos tokens o ciclo permite (ex: 500_000)
+
+  tokensLimit Int 
   tokensUsed  Int @default(0)
 
-  cycleStart DateTime // início do ciclo atual
-  cycleEnd   DateTime // fim do ciclo atual
+  cycleStart DateTime 
+  cycleEnd   DateTime 
 
-  // Campos Stripe pra futuro (se quiser usar subscription de verdade)
   stripeCustomerId     String?
   stripeSubscriptionId String?
 
@@ -145,7 +140,7 @@ model ChatSession {
 
 model Table {
   id        Int      @id @default(autoincrement())
-  name      String   @unique      // número/nome da mesa (ex: "1", "2", "Balcão")
+  name      String   @unique  
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -1,9 +1,7 @@
-// src/modules/menu/routes/menu.routes.ts
 import { FastifyInstance } from "fastify";
 import { prisma } from "src/infrastructure/database";
 
 const menuRoutes = (app: FastifyInstance) => {
-  // POST /menu → cria item
   app.post(
     "/menu",
     { onRequest: [app.authenticate, app.authorizeRoles(["ADMIN", "USER"])] },
@@ -27,7 +25,6 @@ const menuRoutes = (app: FastifyInstance) => {
     }
   );
 
-  // GET /menu → lista todos os itens
   app.get("/menu", async (req, reply) => {
     try {
       const items = await prisma.menuItem.findMany({
@@ -43,7 +40,6 @@ const menuRoutes = (app: FastifyInstance) => {
     }
   });
 
-  // DELETE /menu/:id → remove item específico
   app.delete(
     "/menu/:id",
     { onRequest: [app.authenticate, app.authorizeRoles(["ADMIN", "USER"])] },
@@ -63,7 +59,6 @@ const menuRoutes = (app: FastifyInstance) => {
 
           return reply.status(200).send(deleted);
         } catch (err: any) {
-          // P2025 = registro não encontrado
           if (err.code === "P2025") {
             return reply.status(404).send({ message: "Item não encontrado" });
           }

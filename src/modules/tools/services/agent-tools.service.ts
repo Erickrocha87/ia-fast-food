@@ -1,4 +1,3 @@
-// src/modules/tools/services/index.ts (ou arquivo equivalente)
 import { prisma } from "src/infrastructure/database";
 import { PrismaMenuRepository } from "src/modules/menu/infrastructure/prisma/repositories/prisma-menu-repository";
 import { MenuService } from "src/modules/menu/services/menu.service";
@@ -100,7 +99,6 @@ export const restaurantTools = {
       const name = originalName.toLowerCase();
 
       if (lower.includes(name)) {
-        // extrair quantidade básica
         let qty = 1;
 
         const qtyMatch = lower.match(
@@ -152,8 +150,6 @@ export const restaurantTools = {
       };
     }
 
-    // Se quiser no futuro mexer em status, faz aqui.
-    // Por enquanto só confirma o envio.
     return {
       ok: true,
       message: `O pedido da mesa ${tableNumber} foi enviado para a cozinha. Assim que estiver pronto, avisaremos.`,

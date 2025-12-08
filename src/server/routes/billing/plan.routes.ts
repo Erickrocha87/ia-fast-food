@@ -1,4 +1,3 @@
-// src/modules/billing/routes/plan.routes.ts
 import { FastifyInstance } from "fastify";
 import { prisma } from "src/infrastructure/database";
 

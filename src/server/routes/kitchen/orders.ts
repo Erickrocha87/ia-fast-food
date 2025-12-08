@@ -1,9 +1,7 @@
-// src/server/routes/kitchen/orders.ts
 import { FastifyInstance } from "fastify";
 import { prisma } from "src/infrastructure/database";
 
 export async function orderKitchenRoutes(app: FastifyInstance) {
-  // 1) Pedidos Abertos (pendentes na cozinha) – status Open
   app.get("/orders/kitchen", async (req, reply) => {
     try {
       const orders = await prisma.order.findMany({
@@ -23,7 +21,6 @@ export async function orderKitchenRoutes(app: FastifyInstance) {
     }
   });
 
-  // 2) Cozinha conclui pedido – Open -> Paid
   app.patch("/orders/kitchen/:id/complete", async (req, reply) => {
     try {
       const id = Number((req.params as any).id);
@@ -40,7 +37,6 @@ export async function orderKitchenRoutes(app: FastifyInstance) {
     }
   });
 
-  // 3) Pedidos concluídos na cozinha – status Paid
   app.get("/orders/kitchen/completed", async (req, reply) => {
     try {
       const orders = await prisma.order.findMany({

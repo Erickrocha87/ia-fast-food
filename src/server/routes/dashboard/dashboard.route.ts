@@ -7,7 +7,6 @@ export async function dashboardRoutes(app: FastifyInstance) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      // Pedidos de hoje
       const pedidosHoje = await prisma.order.findMany({
         where: {
           createdAt: {
@@ -21,7 +20,6 @@ export async function dashboardRoutes(app: FastifyInstance) {
 
       const totalPedidos = pedidosHoje.length;
 
-      // Somar total de cada pedido
       const faturamento = pedidosHoje.reduce((acc, order) => {
         const totalOrder = order.orderItems.reduce(
           (sum, item) => sum + item.price * item.quantity,
@@ -30,12 +28,10 @@ export async function dashboardRoutes(app: FastifyInstance) {
         return acc + totalOrder;
       }, 0);
 
-      // Pedidos ativos
       const ordensAtivas = await prisma.order.count({
         where: { status: "Open" },
       });
 
-      // Tempo médio (fake simples)
       const tempoMedio = 12;
 
       return reply.send({

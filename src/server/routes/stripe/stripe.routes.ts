@@ -31,8 +31,7 @@ export async function stripeRoutes(app: FastifyInstance) {
       }
 
       const isMensal = tipo === "mensal";
-
-      // Se priceMonthly / priceYearly estiverem em REAIS, converte pra centavos
+      
       const baseAmount = isMensal ? plan.priceMonthly : plan.priceYearly;
 
       if (baseAmount == null) {
@@ -41,7 +40,7 @@ export async function stripeRoutes(app: FastifyInstance) {
           .send({ error: "Valor do plano não configurado." });
       }
 
-      const unitAmount = Math.round(Number(baseAmount) * 100); // R$ 129.90 → 12990
+      const unitAmount = Math.round(Number(baseAmount) * 100); 
 
       const SUCCESS_URL = `http://localhost:3000/sucesso?plano=${encodeURIComponent(
         plano

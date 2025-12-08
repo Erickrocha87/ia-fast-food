@@ -1,4 +1,3 @@
-// menu.controller.ts
 import { FastifyReply, FastifyRequest } from "fastify";
 import { MenuService } from "../services/menu.service";
 import { createMenuBodySchema } from "../schema/menu.schema";
@@ -33,7 +32,6 @@ class MenuController {
     }
   };
 
-  // ✅ handler correto pra listar itens do menu usando cache
   getAllMenuItemsCached = async (req: FastifyRequest, reply: FastifyReply) => {
     try {
       const items = await this.menuService.getAllMenuItemsCached();

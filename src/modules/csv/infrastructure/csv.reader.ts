@@ -1,4 +1,3 @@
-// src/modules/csv/infrastructure/csv.reader.ts
 import fs from "fs";
 import Papa from "papaparse";
 import * as fastcsv from "fast-csv";
@@ -20,8 +19,6 @@ export async function readCsv(filePath: string): Promise<any[]> {
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
-        // ❌ TIRA o delimiter fixo
-        // delimiter: ";",
         transformHeader: normalizeHeader,
         complete: (results) => {
           console.log("🔎 Primeiras linhas (Papa):", results.data.slice(0, 3));
@@ -52,9 +49,7 @@ export async function readCsv(filePath: string): Promise<any[]> {
             ),
           ignoreEmpty: true,
           trim: true,
-          // aqui também podemos deixar o padrão (vírgula)
-          // se você quiser aceitar ; no futuro, dá pra tratar depois
-          // delimiter: ";",
+        
         })
       )
       .on("error", reject)
