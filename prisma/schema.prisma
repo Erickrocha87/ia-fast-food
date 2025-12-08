@@ -11,6 +11,7 @@ enum OrderStatus {
   Open
   Canceled
   Paid
+  Ready
 }
 
 enum UserRole {
