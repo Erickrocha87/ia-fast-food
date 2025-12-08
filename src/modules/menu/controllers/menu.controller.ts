@@ -1,3 +1,4 @@
+// menu.controller.ts
 import { FastifyReply, FastifyRequest } from "fastify";
 import { MenuService } from "../services/menu.service";
 import { createMenuBodySchema } from "../schema/menu.schema";
@@ -12,7 +13,6 @@ class MenuController {
   create = async (req: FastifyRequest, reply: FastifyReply) => {
     try {
       const payload = createMenuBodySchema.parse(req.body);
-
       const createdMenu = await this.menuService.create(payload);
       return reply.status(201).send(createdMenu);
     } catch (error) {
@@ -29,6 +29,19 @@ class MenuController {
     } catch (error) {
       return reply.status(500).send({
         message: "Erro ao buscar menus",
+      });
+    }
+  };
+
+  // ✅ handler correto pra listar itens do menu usando cache
+  getAllMenuItemsCached = async (req: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const items = await this.menuService.getAllMenuItemsCached();
+      return reply.status(200).send(items);
+    } catch (error) {
+      console.error("Erro ao buscar cardápio com cache:", error);
+      return reply.status(500).send({
+        message: "Erro ao buscar cardápio",
       });
     }
   };

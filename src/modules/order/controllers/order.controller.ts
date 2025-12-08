@@ -1,16 +1,18 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { OrderService } from "../services/order.service";
-import { AddOrderItemDTO, RemoveOrderItemDTO } from "src/modules/orderItem/domain/dto/order-item";
+import {
+  AddOrderItemDTO,
+  RemoveOrderItemDTO,
+} from "src/modules/orderItem/domain/dto/order-item";
 import { UpdateOrderStatusDTO } from "../domain/dto/order";
-
 
 export class OrderController {
   constructor(private readonly service: OrderService) {}
 
-  async createOrAttachToOpen(
+  createOrAttachToOpen = async (
     req: FastifyRequest<{ Body: { tableNumber: string } }>,
     reply: FastifyReply
-  ) {
+  ) => {
     try {
       const { tableNumber } = req.body;
       const order = await this.service.findOrCreateOpen(tableNumber);
@@ -22,12 +24,12 @@ export class OrderController {
     } catch (error: any) {
       return reply.status(400).send({ success: false, error: error.message });
     }
-  }
+  };
 
-  async addItem(
+  addItem = async (
     req: FastifyRequest<{ Body: AddOrderItemDTO }>,
     reply: FastifyReply
-  ) {
+  ) => {
     try {
       const dto = req.body;
       const updated = await this.service.addItem(dto);
@@ -40,12 +42,12 @@ export class OrderController {
     } catch (error: any) {
       return reply.status(400).send({ success: false, error: error.message });
     }
-  }
+  };
 
-  async removeItem(
+  removeItem = async (
     req: FastifyRequest<{ Body: RemoveOrderItemDTO }>,
     reply: FastifyReply
-  ) {
+  ) => {
     try {
       const dto = req.body;
       const updated = await this.service.removeItem(dto);
@@ -58,12 +60,12 @@ export class OrderController {
     } catch (error: any) {
       return reply.status(400).send({ success: false, error: error.message });
     }
-  }
+  };
 
-  async getSummary(
+  getSummary = async (
     req: FastifyRequest<{ Params: { orderId: string } }>,
     reply: FastifyReply
-  ) {
+  ) => {
     try {
       const orderId = Number(req.params.orderId);
       const summary = await this.service.getSummary(orderId);
@@ -71,12 +73,15 @@ export class OrderController {
     } catch (error: any) {
       return reply.status(404).send({ success: false, error: error.message });
     }
-  }
+  };
 
-  async updateStatus(
-    req: FastifyRequest<{ Params: { orderId: string }; Body: UpdateOrderStatusDTO }>,
+  updateStatus = async (
+    req: FastifyRequest<{
+      Params: { orderId: string };
+      Body: UpdateOrderStatusDTO;
+    }>,
     reply: FastifyReply
-  ) {
+  ) => {
     try {
       const orderId = Number(req.params.orderId);
       const { status } = req.body;
@@ -89,5 +94,5 @@ export class OrderController {
     } catch (error: any) {
       return reply.status(400).send({ success: false, error: error.message });
     }
-  }
+  };
 }
