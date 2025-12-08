@@ -18,6 +18,7 @@ import { dashboardRoutes } from "./routes/dashboard/dashboard.route";
 import { planRoutes } from "./routes/billing/plan.routes";
 import { subscriptionRoutes } from "./routes/billing/subscription.routes";
 import { userRoutes } from "./routes/user/user.routes";
+import { tokenUsageRoutes } from "./routes/billing/token-usage.routes";
 
 export class App {
   public server: FastifyInstance;
@@ -74,6 +75,7 @@ export class App {
     await this.server.register(stripeRoutes);
     await this.server.register(subscriptionRoutes);
     await this.server.register(userRoutes);
+    await this.server.register(tokenUsageRoutes);
   }
 
   public async start() {

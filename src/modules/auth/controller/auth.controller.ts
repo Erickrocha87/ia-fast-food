@@ -27,6 +27,7 @@ export class AuthController {
   };
 
   login = async (req: FastifyRequest, res: FastifyReply) => {
+    console.log("BATEU AQUI", req.body)
     const { email, password } = authUserSchema.parse(req.body);
 
     const user = await this.authRepository.findUserByEmail(email);
