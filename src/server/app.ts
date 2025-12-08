@@ -15,6 +15,7 @@ import { realtimeWebRTCRoutes } from "./routes/realtime/realtime-webrtc.routes";
 import { stripeRoutes } from "./routes/stripe/stripe.routes";
 import { orderKitchenRoutes } from "./routes/kitchen/orders";
 import { orderCashierRoutes } from "./routes/cashier/orders";
+import { tableRoutes } from "./routes/tables/tables.routes";
 import { dashboardRoutes } from "./routes/dashboard/dashboard.route";
 import { planRoutes } from "./routes/billing/plan.routes";
 import { subscriptionRoutes } from "./routes/billing/subscription.routes";
@@ -72,6 +73,7 @@ export class App {
     await this.server.register(realtimeWebRTCRoutes);
     await this.server.register(orderKitchenRoutes);
     await this.server.register(orderCashierRoutes);
+    await this.server.register(tableRoutes);
     await this.server.register(dashboardRoutes);
     await this.server.register(planRoutes);
     await this.server.register(stripeRoutes);

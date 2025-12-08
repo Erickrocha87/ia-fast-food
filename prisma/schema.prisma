@@ -142,3 +142,11 @@ model ChatSession {
 
   @@index([tableNumber])
 }
+
+model Table {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique      // número/nome da mesa (ex: "1", "2", "Balcão")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
