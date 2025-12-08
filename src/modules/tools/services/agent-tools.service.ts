@@ -78,6 +78,90 @@ export const restaurantTools = {
     };
   },
 
+  parse_items_from_speech: async ({ text }: { text?: string }) => {
+    if (!text) {
+      return {
+        ok: false,
+        message: "Nenhuma frase recebida.",
+        items: [] as any[],
+      };
+    }
+
+    const items = await prisma.menuItem.findMany();
+    const lower = text.toLowerCase();
+
+    const matches: { menuItemId: number; quantity: number; name: string }[] =
+      [];
+
+    for (const item of items) {
+      const originalName = item.name ?? "";
+      if (!originalName) continue;
+
+      const name = originalName.toLowerCase();
+
+      if (lower.includes(name)) {
+        // extrair quantidade básica
+        let qty = 1;
+
+        const qtyMatch = lower.match(
+          new RegExp(`(\\d+)\\s*(x|unidade|unidades|vezes)?\\s*${name}`)
+        );
+
+        if (qtyMatch) qty = Number(qtyMatch[1]) || 1;
+
+        matches.push({
+          menuItemId: item.id,
+          quantity: qty,
+          name: originalName,
+        });
+      }
+    }
+
+    if (matches.length === 0) {
+      return {
+        ok: false,
+        message: "Não identifiquei itens do cardápio na frase.",
+        items: [],
+      };
+    }
+
+    const msgLista = matches.map((m) => `${m.quantity}x ${m.name}`).join(", ");
+
+    return {
+      ok: true,
+      message: `Detectei ${matches.length} item(ns): ${msgLista}`,
+      items: matches,
+    };
+  },
+
+  finalize_order: async ({ tableNumber }: { tableNumber?: string }) => {
+    if (!tableNumber) {
+      return { ok: false, message: "Mesa inválida." };
+    }
+
+    const order = await orderService.findOrCreateOpen(String(tableNumber));
+    const summary = await orderService.getSummary(order.id);
+
+    const items = summary.items || [];
+    if (!items.length) {
+      return {
+        ok: false,
+        message: `O pedido da mesa ${tableNumber} está vazio, nada foi enviado para a cozinha.`,
+        orderId: order.id,
+        summary,
+      };
+    }
+
+    // Se quiser no futuro mexer em status, faz aqui.
+    // Por enquanto só confirma o envio.
+    return {
+      ok: true,
+      message: `O pedido da mesa ${tableNumber} foi enviado para a cozinha. Assim que estiver pronto, avisaremos.`,
+      orderId: order.id,
+      summary,
+    };
+  },
+
   get_order_summary: async ({ tableNumber }) => {
     if (!tableNumber) return { ok: false, message: "Mesa inválida." };
 
@@ -100,9 +184,7 @@ export const restaurantTools = {
       .map((i: any) => `${i.quantity}x ${i.name}`)
       .join(", ");
 
-    const totalFormatado = Number(total)
-      .toFixed(2)
-      .replace(".", ",");
+    const totalFormatado = Number(total).toFixed(2).replace(".", ",");
 
     const message = `Seu pedido atual tem ${items.length} item(ns): ${itensTexto}. O total é R$ ${totalFormatado}.`;
 
@@ -198,6 +280,33 @@ export const toolDefinitions = [
       properties: {
         query: { type: "string" },
       },
+    },
+  },
+  {
+    type: "function",
+    name: "parse_items_from_speech",
+    description:
+      "Extrai múltiplos itens mencionados na fala e suas quantidades com base no cardápio.",
+    parameters: {
+      type: "object",
+      properties: {
+        text: { type: "string" },
+        tableNumber: { type: "string" },
+      },
+      required: ["text"],
+    },
+  },
+  {
+    type: "function",
+    name: "finalize_order",
+    description:
+      "Finaliza o pedido atual da mesa e considera que ele foi enviado para a cozinha.",
+    parameters: {
+      type: "object",
+      properties: {
+        tableNumber: { type: "string" },
+      },
+      required: ["tableNumber"],
     },
   },
 ];

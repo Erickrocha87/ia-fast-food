@@ -6,7 +6,7 @@ import { seedPlan } from "./plan-seed";
 async function main() {
   const prisma = new PrismaClient();
 
-  await seedMenu(prisma);
+  // await seedMenu(prisma);
   await seedPlan(prisma);
 }
 

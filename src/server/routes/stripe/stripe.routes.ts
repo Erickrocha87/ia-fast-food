@@ -12,9 +12,19 @@ export async function stripeRoutes(app: FastifyInstance) {
     };
 
     try {
+      console.log("🧾 /stripe/checkout body:", { plano, tipo });
+
+      if (!plano || !tipo) {
+        return reply
+          .status(400)
+          .send({ error: "Dados de plano ou tipo de cobrança inválidos." });
+      }
+
       const plan = await prisma.plan.findUnique({
         where: { slug: plano },
       });
+
+      console.log("🔎 Plano encontrado:", plan);
 
       if (!plan) {
         return reply.status(400).send({ error: "Plano inválido." });
@@ -22,11 +32,21 @@ export async function stripeRoutes(app: FastifyInstance) {
 
       const isMensal = tipo === "mensal";
 
-      const unitAmount = isMensal ? plan.priceMonthly : plan.priceYearly;
+      // Se priceMonthly / priceYearly estiverem em REAIS, converte pra centavos
+      const baseAmount = isMensal ? plan.priceMonthly : plan.priceYearly;
+
+      if (baseAmount == null) {
+        return reply
+          .status(400)
+          .send({ error: "Valor do plano não configurado." });
+      }
+
+      const unitAmount = Math.round(Number(baseAmount) * 100); // R$ 129.90 → 12990
 
       const SUCCESS_URL = `http://localhost:3000/sucesso?plano=${encodeURIComponent(
         plano
       )}&tipo=${encodeURIComponent(tipo)}`;
+
       const CANCEL_URL = `http://localhost:3000/falha?plano=${encodeURIComponent(
         plano
       )}&tipo=${encodeURIComponent(tipo)}`;
@@ -43,7 +63,6 @@ export async function stripeRoutes(app: FastifyInstance) {
                 name: `ServeAI – Plano ${plan.name} ${
                   isMensal ? "(Mensal)" : "(Anual)"
                 }`,
-
                 description: [
                   "Perfeito para restaurantes com atendimento inteligente por IA.",
                   "",
@@ -59,16 +78,7 @@ export async function stripeRoutes(app: FastifyInstance) {
                     isMensal ? "Cobrança mensal" : "Cobrança anual"
                   } com renovação automática`,
                 ].join("\n"),
-
-                metadata: {
-                  plan_id: String(plan.id),
-                  plan_slug: plan.slug,
-                  tokens_per_month: String(plan.tokensPerMonth),
-                  max_tablets: plan.maxTablets?.toString() ?? "unlimited",
-                  billing_period: isMensal ? "monthly" : "yearly",
-                },
               },
-
               unit_amount: unitAmount,
             },
             quantity: 1,
@@ -81,7 +91,7 @@ export async function stripeRoutes(app: FastifyInstance) {
       return reply.send({ url: session.url });
     } catch (err: any) {
       console.log("❌ ERRO CHECKOUT:", err);
-      return reply.status(500).send({ error: err.message });
+      return reply.status(500).send({ error: "Erro ao criar sessão Stripe." });
     }
   });
 }
